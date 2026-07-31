@@ -1,0 +1,9 @@
+# float64_test_config.yaml
+float64_test:
+  node_name: float64_test
+  topic_name: /float64_test
+  topic_type: float64
+  filters:
+    value:
+      freq: 100.0
+      cutoff: 10.0

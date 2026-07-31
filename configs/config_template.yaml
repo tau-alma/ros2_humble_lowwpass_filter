@@ -1,0 +1,133 @@
+# Template config for lowpass_filter nodes.
+# Each top-level entry is one LowpassFilterNode instance, read by the
+# filter runner script and turned into one FilterNodeConfig.
+#
+# Field reference (matches lowpass_filter_node.h):
+#   node_name    - unique ROS node name for this instance
+#   topic_name   - topic to subscribe to (publisher goes to <topic_name>_filt)
+#   topic_type   - one of: joint_state, odometry, float64, float64_multi_array,
+#                  fluid_pressure, magnetic_field
+#   sensor       - only used when topic_type == joint_state and mode == raw_encoder
+#                  one of: center_link, boom, bucket, none
+#   mode         - only used when topic_type == joint_state
+#                  one of: raw_encoder, full_state
+#   filters      - map of filter_name -> filter params
+#     freq       - sample rate (Hz)
+#     cutoff     - cutoff frequency (Hz)
+#     zeta       - damping ratio, only meaningful for order 2 (default 0.7071)
+#     order      - 1 or 2 (default 1)
+#     derivator  - true/false, whether this filter differentiates (default false)
+#     prewarp    - true/false, whether to prewarp the cutoff (default false)
+
+# --- JointState, raw encoder mode ---
+# requires exactly the keys: ang, vel, acc
+center_link_joint:
+  node_name: center_link_filter
+  topic_name: /joint_states
+  topic_type: joint_state
+  mode: raw_encoder
+  sensor: center_link
+  filters:
+    ang:
+      freq: 100.0
+      cutoff: 5.0
+    vel:
+      freq: 100.0
+      cutoff: 5.0
+      derivator: true
+    acc:
+      freq: 100.0
+      cutoff: 5.0
+      derivator: true
+
+# --- JointState, full state mode ---
+# requires exactly the keys: position, velocity, effort
+boom_joint:
+  node_name: boom_filter
+  topic_name: /boom_joint_states
+  topic_type: joint_state
+  mode: full_state
+  sensor: none
+  filters:
+    position:
+      freq: 100.0
+      cutoff: 5.0
+    velocity:
+      freq: 100.0
+      cutoff: 5.0
+    effort:
+      freq: 100.0
+      cutoff: 5.0
+
+# --- Odometry ---
+# filters map may contain any subset of: vx, vy, vz, wx, wy, wz
+base_odometry:
+  node_name: odometry_filter
+  topic_name: /odom
+  topic_type: odometry
+  filters:
+    vx:
+      freq: 100.0
+      cutoff: 5.0
+    wz:
+      freq: 100.0
+      cutoff: 5.0
+
+# --- Float64 ---
+# filters map must contain exactly one key: value
+pressure_sensor:
+  node_name: pressure_filter
+  topic_name: /pressure
+  topic_type: float64
+  filters:
+    value:
+      freq: 100.0
+      cutoff: 8.0
+
+# --- Float64MultiArray ---
+# filters map must contain exactly one key per array element,
+# named by index as a string: "0", "1", "2", ...
+force_array_sensor:
+  node_name: force_array_filter
+  topic_name: /force_sensors
+  topic_type: float64_multi_array
+  filters:
+    "0":
+      freq: 100.0
+      cutoff: 8.0
+    "1":
+      freq: 100.0
+      cutoff: 8.0
+    "2":
+      freq: 100.0
+      cutoff: 8.0
+
+# --- FluidPressure ---
+# filters map must contain exactly one key: fluid_pressure
+# (the message's own "variance" field is passed through unfiltered)
+barometer:
+  node_name: barometer_filter
+  topic_name: /barometric_pressure
+  topic_type: fluid_pressure
+  filters:
+    fluid_pressure:
+      freq: 50.0
+      cutoff: 2.0
+
+# --- MagneticField ---
+# filters map may contain any subset of: x, y, z
+# (the message's own "magnetic_field_covariance" is passed through unfiltered)
+magnetometer:
+  node_name: magnetometer_filter
+  topic_name: /magnetic_field
+  topic_type: magnetic_field
+  filters:
+    x:
+      freq: 50.0
+      cutoff: 3.0
+    y:
+      freq: 50.0
+      cutoff: 3.0
+    z:
+      freq: 50.0
+      cutoff: 3.0
