@@ -29,6 +29,9 @@ add_executable(test_publish_performance src/filter_perf_test.cpp src/lowpass_fil
 ament_target_dependencies(test_publish_performance rclcpp sensor_msgs)
 target_include_directories(test_publish_performance PUBLIC include)
 
+install(DIRECTORY configs DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
