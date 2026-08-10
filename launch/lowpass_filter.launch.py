@@ -7,7 +7,7 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     default_config = os.path.join(
-        get_package_share_directory('lowpass_filter'), 'configs', 'config_template.yaml'
+        get_package_share_directory('motion_control'), 'config', 'eevee_config.yaml'
     )
 
     config_arg = DeclareLaunchArgument(
