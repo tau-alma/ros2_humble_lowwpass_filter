@@ -10,6 +10,7 @@
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include "sensor_msgs/msg/magnetic_field.hpp"
 #include "sensor_msgs/msg/fluid_pressure.hpp"
+#include "sensor_msgs/msg/imu.hpp"
 
 // standard imports
 #include <chrono>
@@ -27,7 +28,8 @@ enum class TopicType {
     Float64,
     Float64MultiArray,
     MagneticField,
-    FluidPressure
+    FluidPressure,
+    Imu
 };
 
 enum class SensorType {
@@ -71,6 +73,7 @@ class LowpassFilterNode : public rclcpp::Node {
         void float64_multiarray_callback(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
         void magnetic_field_callback(const sensor_msgs::msg::MagneticField::SharedPtr msg);
         void fluid_pressure_callback(const sensor_msgs::msg::FluidPressure::SharedPtr msg);
+        void imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg);
     private:
         JointStateMode joint_state_mode_;
         SensorType sensor_;
@@ -101,6 +104,10 @@ class LowpassFilterNode : public rclcpp::Node {
         sensor_msgs::msg::FluidPressure fluid_pressure_msg_;
         rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr fluid_pressure_sub_;
         rclcpp::Publisher<sensor_msgs::msg::FluidPressure>::SharedPtr fluid_pressure_pub_;
+
+        sensor_msgs::msg::Imu imu_msg_;
+        rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
+        rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
 
 };
 

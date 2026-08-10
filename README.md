@@ -18,7 +18,8 @@ change a cutoff frequency, or filter a different topic.
 | `float64`                 | `std_msgs/msg/Float64`               | `value` (fixed) |
 | `float64_multi_array`      | `std_msgs/msg/Float64MultiArray`     | one key per array element, named `"0"`, `"1"`, `"2"`, ... |
 | `fluid_pressure`           | `sensor_msgs/msg/FluidPressure`      | `fluid_pressure` (fixed) — `variance` is passed through unfiltered |
-| `magnetic_field`           | `sensor_msgs/msg/MagneticField`      | any subset of `x`, `y`, `z` — `magnetic_field_covariance` is passed through unfiltered |
+| `magnetic_field`           | `sensor_msgs/msg/MagneticField`      | any subset of `x`, `y`, `z` — `magnetic_field_covariance` is passed through unfiltered | 
+|`imu`  | `sensor_msgs/msg/Imu`     |	any subset of `ax`, `ay`, `az` (linear acceleration), `wx`, `wy`, `wz` (angular velocity) — orientation and all covariances are passed through unfiltered |
 
 Each filter node subscribes to `<topic_name>` and publishes the filtered
 result to `<topic_name>_filt`, preserving message fields it isn't

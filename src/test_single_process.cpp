@@ -13,6 +13,7 @@
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include "sensor_msgs/msg/fluid_pressure.hpp"
 #include "sensor_msgs/msg/magnetic_field.hpp"
+#include "sensor_msgs/msg/imu.hpp"
 
 #include "lowpass_filter_node.h"
 #include "config_loader.h"
@@ -30,6 +31,7 @@ using std_msgs::msg::Float64;
 using std_msgs::msg::Float64MultiArray;
 using sensor_msgs::msg::FluidPressure;
 using sensor_msgs::msg::MagneticField;
+using sensor_msgs::msg::Imu;
 using namespace std::chrono_literals;
 
 // --- generic test helpers, reused across every message type ---
@@ -106,6 +108,9 @@ int main(int argc, char** argv) {
     std::vector<std::shared_ptr<GenericPublisher<MagneticField>>> mf_pubs;
     std::vector<std::shared_ptr<GenericSubscriber<MagneticField>>> mf_subs;
 
+    std::vector<std::shared_ptr<GenericPublisher<Imu>>> imu_pubs;
+    std::vector<std::shared_ptr<GenericSubscriber<Imu>>> imu_subs;
+
     int idx = 0;
     for (const auto& conf : configs) {
         auto filter_node = std::make_shared<LowpassFilterNode>(conf.node_name, conf.topic_name, conf.config);
@@ -171,6 +176,15 @@ int main(int argc, char** argv) {
                 mf_subs.push_back(sub);
                 break;
             }
+            case TopicType::Imu: {
+                auto pub = std::make_shared<GenericPublisher<Imu>>("imu_pub" + tag, conf.topic_name);
+                auto sub = std::make_shared<GenericSubscriber<Imu>>("imu_sub" + tag, conf.topic_name + "_filt");
+                executor.add_node(pub);
+                executor.add_node(sub);
+                imu_pubs.push_back(pub);
+                imu_subs.push_back(sub);
+                break;
+            }
         }
     }
 
@@ -234,6 +248,20 @@ int main(int argc, char** argv) {
             mf_pubs[k]->publish_msg(msg);
         }
 
+        // Imu: plausible linear acceleration (gravity + a bit of sine) and
+        // small angular velocity; orientation left at the default identity
+        // quaternion since this package doesn't filter orientation.
+        for (size_t k = 0; k < imu_pubs.size(); k++) {
+            Imu msg;
+            msg.linear_acceleration.x = std::sin(t) * 0.5;
+            msg.linear_acceleration.y = std::cos(t) * 0.5;
+            msg.linear_acceleration.z = 9.81 + std::sin(t) * 0.2;
+            msg.angular_velocity.x = std::sin(t) * 0.1;
+            msg.angular_velocity.y = std::cos(t) * 0.1;
+            msg.angular_velocity.z = std::sin(t * 0.5) * 0.1;
+            imu_pubs[k]->publish_msg(msg);
+        }
+
         executor.spin_some(50ms);
         std::this_thread::sleep_for(20ms);
         executor.spin_some(50ms);
@@ -269,6 +297,15 @@ int main(int argc, char** argv) {
         std::cout << "MagneticField[" << k << "] x=" << m.magnetic_field.x
                    << " y=" << m.magnetic_field.y
                    << " z=" << m.magnetic_field.z << "\n";
+    }
+    for (size_t k = 0; k < imu_subs.size(); k++) {
+        const auto& m = imu_subs[k]->last_msg_;
+        std::cout << "Imu[" << k << "] ax=" << m.linear_acceleration.x
+                   << " ay=" << m.linear_acceleration.y
+                   << " az=" << m.linear_acceleration.z
+                   << " wx=" << m.angular_velocity.x
+                   << " wy=" << m.angular_velocity.y
+                   << " wz=" << m.angular_velocity.z << "\n";
     }
 
     rclcpp::shutdown();

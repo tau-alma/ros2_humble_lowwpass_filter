@@ -131,3 +131,32 @@ magnetometer:
     z:
       freq: 50.0
       cutoff: 3.0
+
+# --- Imu ---
+# filters map may contain any subset of: ax, ay, az (linear acceleration),
+# wx, wy, wz (angular velocity)
+# (the message's own "orientation" field and all covariances are passed
+# through unfiltered)
+imu:
+  node_name: imu_filter
+  topic_name: /imu
+  topic_type: imu
+  filters:
+    ax:
+      freq: 100.0
+      cutoff: 10.0
+    ay:
+      freq: 100.0
+      cutoff: 10.0
+    az:
+      freq: 100.0
+      cutoff: 10.0
+    wx:
+      freq: 100.0
+      cutoff: 10.0
+    wy:
+      freq: 100.0
+      cutoff: 10.0
+    wz:
+      freq: 100.0
+      cutoff: 10.0

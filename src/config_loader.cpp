@@ -17,6 +17,8 @@ TopicType parse_topic_type(const std::string& s) {
         return TopicType::MagneticField;
     } else if (s == "fluid_pressure") {
         return TopicType::FluidPressure;
+    } else if (s == "imu") {
+        return TopicType::Imu;
     } else {
         throw std::invalid_argument("Unknown topic type: " + s);
     }

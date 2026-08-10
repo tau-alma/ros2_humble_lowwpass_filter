@@ -87,6 +87,17 @@ LowpassFilterNode::LowpassFilterNode(
                 filters_.emplace("fluid_pressure", LowpassFilter(filter_config.freq, filter_config.cutoff, filter_config.zeta,
                                                     filter_config.order, filter_config.derivator, filter_config.prewarp));
 
+        } else if (config.topic_type == TopicType::Imu) {
+            imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(
+                topic_name, 10, std::bind(&LowpassFilterNode::imu_callback, this, std::placeholders::_1)
+            );
+            imu_pub_ = create_publisher<sensor_msgs::msg::Imu>(topic_name + "_filt", 10);
+
+            for (const auto& [key, filter_config] : config.filters) {
+                filters_.emplace(key, LowpassFilter(filter_config.freq, filter_config.cutoff, filter_config.zeta,
+                                                    filter_config.order, filter_config.derivator, filter_config.prewarp));
+            }
+
         } else {
             RCLCPP_ERROR(get_logger(), "LowpassFilterNode: unsupported topic type");
             throw std::invalid_argument("LowpassFilterNode: unsupported topic type");
@@ -220,4 +231,29 @@ void LowpassFilterNode::fluid_pressure_callback(const sensor_msgs::msg::FluidPre
     msg->fluid_pressure = filters_.at("fluid_pressure").step(msg->fluid_pressure);
     fluid_pressure_msg_ = *msg;
     fluid_pressure_pub_->publish(fluid_pressure_msg_);
+}
+
+
+void LowpassFilterNode::imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg) {
+    for (auto& [key, filter] : filters_) {
+        if (key == "ax") {
+            msg->linear_acceleration.x = filter.step(msg->linear_acceleration.x);
+        } else if (key == "ay") {
+            msg->linear_acceleration.y = filter.step(msg->linear_acceleration.y);
+        } else if (key == "az") {
+            msg->linear_acceleration.z = filter.step(msg->linear_acceleration.z);
+        } else if (key == "wx") {
+            msg->angular_velocity.x = filter.step(msg->angular_velocity.x);
+        } else if (key == "wy") {
+            msg->angular_velocity.y = filter.step(msg->angular_velocity.y);
+        } else if (key == "wz") {
+            msg->angular_velocity.z = filter.step(msg->angular_velocity.z);
+        } else {
+            RCLCPP_ERROR(get_logger(), "LowpassFilterNode: unsupported key '%s' for imu message", key.c_str());
+            throw std::invalid_argument("LowpassFilterNode: unsupported key '" + key + "' for imu message");
+        }
+    }
+    
+    imu_msg_ = *msg;
+    imu_pub_->publish(imu_msg_);
 }
